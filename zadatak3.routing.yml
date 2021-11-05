@@ -1,0 +1,7 @@
+zadatak3.formaca:
+  path: '/formaca'
+  defaults:
+    _form: '\Drupal\zadatak3\Form\Zadatak3Form'
+    _title: 'Zadatak 3'
+  requirements:
+    _permission: 'Import form'

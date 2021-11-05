@@ -1,0 +1,4 @@
+name: Zadatak 3
+type: module
+description: Ovo je 3. zadatak na praksi u Studio Present-u
+core_version_requirement: ^8 || ^9
