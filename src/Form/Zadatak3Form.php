@@ -2,9 +2,12 @@
 
 namespace Drupal\zadatak3\Form;
 
+use Drupal\Core\File\FileSystem;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\Entity\File;
+use Drupal\node\Entity\Node;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Zadatak3Form extends FormBase
@@ -71,6 +74,53 @@ class Zadatak3Form extends FormBase
       }
       $rows[] = $cells;
     }
+
+    array_shift($rows);
+
+    foreach($rows as $row) {
+      $values = \Drupal::entityQuery('node')->condition('title', $row[0])->execute();
+      $node_not_exists = empty($values);
+
+      //Generisanje slike
+      $data = file_get_contents($row[1]);
+      $slika = file_save_data($data, 'public://sample.png', FileSystemInterface::EXISTS_RENAME);
+      dsm($slika);
+      
+      if($node_not_exists){
+        //Znači, ako node $values ne postoji (Ako nema 'title' field isti kao $row[0]), onda pravimo novi node sa tom vrednošću ($row[0])
+        $node = \Drupal::entityTypeManager()->getStorage('node')->create([
+          'type' => 'clanci_o_programiranju',
+          'title' => $row[0],
+          'field_imagee' => [
+            'target_id' => $slika->id(),
+            'alt' => 'Sample',
+            'title' => 'Sample File',
+            'width' => '80',
+            'height' => '50'
+          ],
+          'field_description' => $row[2],
+          'field_link_to_we' => 'http://www.'.$row[3],
+        ]);
+        $node->save();
+      } else {
+        $nid = reset($values);
+
+        $node = Node::load($nid);
+        $node->setTitle($row[0]);
+        $node->set('field_imagee', [
+          'target_id' => $slika->id(),
+          'alt' => 'Sample',
+          'title' => 'Sample File',
+          'width' => '80',
+          'height' => '50'
+        ]);
+        $node->set('field_description', $row[2]);
+        $node->set('field_link_to_we', $row[3]);
+        $node->save();
+      }
+    }
+
+    \Drupal::messenger()->addMessage('imported succesfully');
 
   }
 }
